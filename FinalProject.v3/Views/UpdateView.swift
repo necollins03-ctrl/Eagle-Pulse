@@ -12,64 +12,58 @@ struct UpdateView: View {
     var store: VenueStore
     @Environment(\.dismiss) var dismiss
 
-    // Picker options
     let lineOptions = ["None", "Short", "Moderate", "Long"]
     let crowdOptions = ["Empty", "Chill", "Moderate", "Busy", "Packed"]
     let coverOptions = ["No cover", "$5", "$10", "$15", "$20+"]
     let entryOptions = ["Walk in", "5 min wait", "10 min wait", "20 min wait", "30+ min wait"]
 
     var body: some View {
-        Form {
-            Section("Line") {
-                Picker("Line Status", selection: $venue.lineStatus) {
-                    ForEach(lineOptions, id: \.self) { option in
-                        Text(option).tag(option)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
+        ZStack {
+            Color("blackBC")
+                .ignoresSafeArea()
 
-            Section("Crowd") {
-                Picker("Crowd Level", selection: $venue.crowdLevel) {
-                    ForEach(crowdOptions, id: \.self) { option in
-                        Text(option).tag(option)
-                    }
-                }
-                .pickerStyle(.wheel)
-            }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 28) {
 
-            Section("Cover") {
-                Picker("Cover Status", selection: $venue.coverStatus) {
-                    ForEach(coverOptions, id: \.self) { option in
-                        Text(option).tag(option)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
+                    OptionSection(title: "Line", options: lineOptions, selected: $venue.lineStatus)
+                    OptionSection(title: "Crowd", options: crowdOptions, selected: $venue.crowdLevel)
+                    OptionSection(title: "Cover", options: coverOptions, selected: $venue.coverStatus)
+                    OptionSection(title: "Entry", options: entryOptions, selected: $venue.entryStatus)
 
-            Section("Entry") {
-                Picker("Entry Status", selection: $venue.entryStatus) {
-                    ForEach(entryOptions, id: \.self) { option in
-                        Text(option).tag(option)
-                    }
-                }
-                .pickerStyle(.wheel)
-            }
+                    // Note
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Note (optional)")
+                            .font(.custom("BebasNeue-Regular", size: 18))
+                            .foregroundStyle(Color("goldBC"))
 
-            Section("Note (optional)") {
-                TextField("Add a note...", text: Binding(
-                    get: { venue.note ?? "" },
-                    set: { venue.note = $0.isEmpty ? nil : $0 }
-                ))
+                        TextField("Add a note...", text: Binding(
+                            get: { venue.note ?? "" },
+                            set: { venue.note = $0.isEmpty ? nil : $0 }
+                        ))
+                        .foregroundStyle(.white)
+                        .padding(12)
+                        .background(Color.white.opacity(0.07))
+                        .cornerRadius(10)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color("goldBC").opacity(0.2), lineWidth: 1)
+                        )
+                    }
+                    .padding(.horizontal)
+                }
+                .padding(.vertical)
             }
         }
         .navigationTitle("Update \(venue.name)")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color("blackBC"), for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel", role: .cancel) {
                     dismiss()
                 }
+                .foregroundStyle(Color("maroonBC"))
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Submit") {
@@ -77,10 +71,12 @@ struct UpdateView: View {
                     store.updateVenue(venue: venue)
                     dismiss()
                 }
+                .foregroundStyle(Color("goldBC"))
             }
         }
     }
 }
+
 
 #Preview {
     NavigationStack {

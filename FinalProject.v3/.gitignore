@@ -1,0 +1,17 @@
+# API KEYS & SECRETS
+GoogleService-Info.plist
+
+# PERSONAL XCODE SETTINGS
+xcuserdata/
+*.xcuserstate
+
+# BUILD OUTPUTS & CACHE
+build/
+DerivedData/
+
+# SWIFT PACKAGE MANAGER
+.build/
+.swiftpm/
+
+# MACOS SYSTEM FILES
+.DS_Store

@@ -6,124 +6,212 @@
 //
 
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
 
 struct VenueDetailView: View {
     var venue: Venue
     var store: VenueStore
     @State private var showUpdateView = false
+    @State private var isGoing = false
+    @State private var showGoingUsers = false
+    @State private var goingUsers: [String] = []
+    @State private var currentUsername: String = ""
 
     var hasEntryForToday: Bool {
         Calendar.current.isDateInToday(venue.lastUpdated)
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+        ZStack {
+            Color("blackBC")
+                .ignoresSafeArea()
 
-                // Header
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(venue.name)
-                        .font(.largeTitle)
-                        .bold()
-                    Text(venue.neighborhood)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
 
-                // Four Status Tiles or No Entry Message
-                if hasEntryForToday {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                        StatusTile(label: "Line", value: venue.lineStatus)
-                        StatusTile(label: "Crowd", value: venue.crowdLevel)
-                        StatusTile(label: "Cover", value: venue.coverStatus)
-                        StatusTile(label: "Entry", value: venue.entryStatus)
+                    // Header
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(venue.name)
+                            .font(.custom("BebasNeue-Regular", size: 42))
+                            .foregroundStyle(Color("goldBC"))
+                        Text(venue.neighborhood)
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.5))
                     }
                     .padding(.horizontal)
 
-                    // Last Updated
-                    Text("Updated \(venue.lastUpdated.formatted(.relative(presentation: .named)))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    // Status Tiles or No Entry
+                    if hasEntryForToday {
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                            StatusTile(label: "Line", value: venue.lineStatus)
+                            StatusTile(label: "Crowd", value: venue.crowdLevel)
+                            StatusTile(label: "Cover", value: venue.coverStatus)
+                            StatusTile(label: "Entry", value: venue.entryStatus)
+                        }
                         .padding(.horizontal)
-
-                    // Note (if exists)
-                    if let note = venue.note, !note.isEmpty {
-                        Text("📝 \(note)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("No entry for tonight yet.")
+                            .foregroundStyle(.white.opacity(0.4))
                             .padding(.horizontal)
                     }
 
-                } else {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                        StatusTile(label: "Line", value: "—")
-                        StatusTile(label: "Crowd", value: "—")
-                        StatusTile(label: "Cover", value: "—")
-                        StatusTile(label: "Entry", value: "—")
+                    // I'm Going Button
+                    VStack(alignment: .leading, spacing: 12) {
+                        Button(action: toggleGoing) {
+                            HStack {
+                                Image(systemName: isGoing ? "checkmark.circle.fill" : "figure.walk")
+                                Text(isGoing ? "You're going!" : "I'm going here tonight")
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(isGoing ? Color("maroonBC") : Color.white.opacity(0.1))
+                            .foregroundStyle(isGoing ? Color("goldBC") : .white)
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(isGoing ? Color("goldBC").opacity(0.4) : Color.white.opacity(0.15), lineWidth: 1)
+                            )
+                        }
+                        .padding(.horizontal)
+
+                        // Who's going
+                        if !goingUsers.isEmpty {
+                            let summary: String = {
+                                if goingUsers.count == 1 {
+                                    return "\(goingUsers[0]) is going tonight"
+                                } else {
+                                    return "\(goingUsers[0]) and \(goingUsers.count - 1) others are going tonight"
+                                }
+                            }()
+
+                            Text(summary)
+                                .font(.subheadline)
+                                .foregroundStyle(Color("goldBC").opacity(0.8))
+                                .padding(.horizontal)
+                                .onTapGesture {
+                                    showGoingUsers = true
+                                }
+                        }
+                    }
+
+                    // Confirm / Update Buttons
+                    HStack(spacing: 12) {
+                        Button("Confirm") {
+                            store.confirmVenue(venue: venue)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color("maroonBC").opacity(0.2))
+                        .foregroundStyle(Color("maroonBC"))
+                        .cornerRadius(10)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color("maroonBC").opacity(0.4), lineWidth: 1)
+                        )
+
+                        Button("Update") {
+                            showUpdateView = true
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color("goldBC").opacity(0.15))
+                        .foregroundStyle(Color("goldBC"))
+                        .cornerRadius(10)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color("goldBC").opacity(0.3), lineWidth: 1)
+                        )
                     }
                     .padding(.horizontal)
-
-                    Text("No entries for tonight yet.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary) //TODO: PROBS CHANGE FOR UI PURPOSES
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 4)
                 }
-
-                Spacer()
-
-                // Confirm and Update Buttons
-                HStack(spacing: 16) {
-                    Button {
-                        store.confirmVenue(venue: venue)
-                    } label: {
-                        Text("Confirm")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button {
-                        showUpdateView = true
-                    } label: {
-                        Text("Update")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .padding()
+                .padding(.vertical)
             }
-            .padding(.top)
         }
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showUpdateView) {
+        .toolbarBackground(Color("blackBC"), for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .fullScreenCover(isPresented: $showUpdateView) {
             NavigationStack {
                 UpdateView(venue: venue, store: store)
             }
         }
+        .sheet(isPresented: $showGoingUsers) {
+            GoingUsersView(users: goingUsers)
+        }
+        .onAppear {
+            fetchGoingUsers()
+        }
+    }
+
+    func toggleGoing() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let db = Firestore.firestore()
+        let venueRef = db.collection("venues").document(venue.id)
+            .collection("going").document(uid)
+
+        if isGoing {
+            venueRef.delete()
+            isGoing = false
+            goingUsers.removeAll { $0 == currentUsername }
+        } else {
+            db.collection("users").document(uid).getDocument { doc, _ in
+                let username = doc?.data()?["username"] as? String ?? "Someone"
+                currentUsername = username
+                venueRef.setData([
+                    "username": username,
+                    "timestamp": Timestamp(),
+                    "date": Calendar.current.startOfDay(for: Date()).timeIntervalSince1970
+                ])
+                isGoing = true
+                goingUsers.append(username)
+            }
+        }
+    }
+
+    func fetchGoingUsers() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let venueId = venue.id
+        let db = Firestore.firestore()
+        let todayStart = Calendar.current.startOfDay(for: Date()).timeIntervalSince1970
+
+        db.collection("venues").document(venueId)
+            .collection("going")
+            .whereField("date", isEqualTo: todayStart)
+            .getDocuments { snapshot, _ in
+                guard let docs = snapshot?.documents else { return }
+                goingUsers = docs.compactMap { $0.data()["username"] as? String }
+                isGoing = docs.contains { $0.documentID == uid }
+                if let myDoc = docs.first(where: { $0.documentID == uid }) {
+                    currentUsername = myDoc.data()["username"] as? String ?? ""
+                }
+            }
     }
 }
 
-// MARK: - Status Tile Component
 struct StatusTile: View {
     var label: String
     var value: String
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(label)
                 .font(.caption)
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
+                .foregroundStyle(Color("goldBC").opacity(0.7))
             Text(value)
                 .font(.headline)
                 .bold()
-                .multilineTextAlignment(.center)
+                .foregroundStyle(.white)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color.white.opacity(0.07))
         .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color("goldBC").opacity(0.2), lineWidth: 1)
+        )
     }
 }
 
@@ -133,7 +221,7 @@ struct StatusTile: View {
             id: "preview",
             name: "Test Bar",
             city: "Boston",
-            neighborhood: "Fenway",
+            neighborhood: "Allston",
             lineStatus: "Short",
             crowdLevel: "Busy",
             coverStatus: "$10",

@@ -13,40 +13,65 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 0) {
+            ZStack {
+                Color("blackBC")
+                    .ignoresSafeArea()
+                
+                VStack(alignment: .leading, spacing: 0) {
 
-                // Headline
-                Text("Going out?")
-                    .font(.largeTitle)
-                    .bold()
-                    .padding(.horizontal)
-                    .padding(.top)
+                    // Headline
+                    Text("Going out?")
+                        .font(.custom("BebasNeue-Regular", size: 42))
+                        .foregroundStyle(Color("goldBC"))
+                        .padding(.horizontal)
+                        .padding(.top)
 
-                // Search Bar
-                TextField("Search venues...", text: $store.searchText)
-                    .textFieldStyle(.roundedBorder)
-                    .padding()
-
-                //  Venue List
-                List(store.filteredVenues) { venue in
-                    NavigationLink(destination: VenueDetailView(venue: venue, store: store)) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(venue.name)
-                                .font(.headline)
-                            Text(venue.neighborhood)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                    // Search Bar
+                    ZStack(alignment: .leading) {
+                        if store.searchText.isEmpty {
+                            Text("Search venues...")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundStyle(Color.white.opacity(0.3))
+                                .padding(.leading, 4)
                         }
-                        .padding(.vertical, 4)
+                        TextField("", text: $store.searchText)
+                            .foregroundStyle(.white)
+                            .tint(Color("goldBC"))
+                    }
+                    .padding(10)
+                    .background(Color.white.opacity(0.08))
+                    .cornerRadius(10)
+                    .padding()
+                    
+                    // Venue List
+                    NavigationStack {
+                        List(store.filteredVenues) { venue in
+                            NavigationLink(destination: VenueDetailView(venue: venue, store: store)) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(venue.name)
+                                        .font(.headline)
+                                        .foregroundStyle(.white)
+                                    Text(venue.neighborhood)
+                                        .font(.subheadline)
+                                        .foregroundStyle(Color("goldBC").opacity(0.7))
+                                }
+                                .padding(.vertical, 6)
+                            }
+                            .listRowBackground(Color.white.opacity(0.05))
+                        }
+                        .listStyle(.plain)
+                        .listRowSeparatorTint(Color("goldBC").opacity(0.8))
                     }
                 }
-                .listStyle(.plain)
             }
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color("blackBC"), for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Add Venue", systemImage: "plus") {
-                        showAddVenue = true
+                    Button(action: { showAddVenue = true }) {
+                        Image(systemName: "plus")
+                            .foregroundStyle(Color("goldBC"))
                     }
                 }
             }

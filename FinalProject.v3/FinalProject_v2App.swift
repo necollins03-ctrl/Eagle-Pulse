@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
-import FirebaseCore
+import Firebase
+import FirebaseAuth
+import GoogleSignIn
 
 @main
-struct FinalProject_v2App: App {
+struct FinalProjectApp: App {
     
     init() {
         FirebaseApp.configure()
@@ -17,7 +19,10 @@ struct FinalProject_v2App: App {
     
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            RootView()
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
     }
 }
