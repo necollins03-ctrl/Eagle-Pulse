@@ -37,7 +37,7 @@ struct UpdateView: View {
                             .foregroundStyle(Color("goldBC"))
 
                         TextField("Add a note...", text: Binding(
-                            get: { venue.note ?? "" },
+                            get: { "" },
                             set: { venue.note = $0.isEmpty ? nil : $0 }
                         ))
                         .foregroundStyle(.white)

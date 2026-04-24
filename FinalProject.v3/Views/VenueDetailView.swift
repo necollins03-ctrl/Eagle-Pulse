@@ -37,7 +37,7 @@ struct VenueDetailView: View {
                             .foregroundStyle(Color("goldBC"))
                         Text(venue.neighborhood)
                             .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.5))
+                            .foregroundStyle(.white.opacity(0.8))
                     }
                     .padding(.horizontal)
 
@@ -50,12 +50,31 @@ struct VenueDetailView: View {
                             StatusTile(label: "Entry", value: venue.entryStatus)
                         }
                         .padding(.horizontal)
+
+                        // Note
+                        if let note = venue.note, !note.isEmpty {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Eagles are saying:")
+                                    .font(.custom("BebasNeue-Regular", size: 32))
+                                    .foregroundStyle(Color("goldBC"))
+                                Text(note)
+                                    .font(.title2)
+                                    .foregroundStyle(.white.opacity(0.8))
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, -8)
+                        }
+                        
+                        // Last updated
+                        Text("Last updated \(venue.lastUpdated.formatted(.relative(presentation: .named)))")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.5))
+                            .padding(.horizontal)
                     } else {
                         Text("No entry for tonight yet.")
                             .foregroundStyle(.white.opacity(0.4))
                             .padding(.horizontal)
                     }
-
                     // I'm Going Button
                     VStack(alignment: .leading, spacing: 12) {
                         Button(action: toggleGoing) {
@@ -227,7 +246,7 @@ struct StatusTile: View {
             coverStatus: "$10",
             entryStatus: "10 min wait",
             lastUpdated: Date(),
-            note: nil
+            note: "Great DJ!"
         ), store: VenueStore())
     }
 }
