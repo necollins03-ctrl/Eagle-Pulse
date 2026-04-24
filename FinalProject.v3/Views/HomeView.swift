@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct HomeView: View {
     @State private var store = VenueStore()
@@ -74,6 +75,17 @@ struct HomeView: View {
                             .foregroundStyle(Color("goldBC"))
                     }
                 }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        do {
+                            try Auth.auth().signOut()
+                        } catch {
+                            print("Sign out error: \(error)")
+                        }
+                    }) {
+                        Image(systemName: "person.circle")
+                            .foregroundStyle(Color("goldBC"))
+                    }                }
             }
             .sheet(isPresented: $showAddVenue) {
                 NavigationStack {

@@ -25,6 +25,8 @@ struct RootView: View {
                             checkUserProfile()
                         } else {
                             isLoading = false
+                            isSignedIn = false
+                            needsUsername = false
                         }
                     }
                 }
